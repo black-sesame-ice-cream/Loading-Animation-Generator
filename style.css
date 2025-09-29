@@ -27,3 +27,12 @@ body {
     border-radius: 50%;
     transform: translate(-50%, -50%);
 }
+
+/* 画像要素のスタイル */
+.image-element {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}

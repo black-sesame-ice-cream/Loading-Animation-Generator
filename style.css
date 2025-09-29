@@ -13,10 +13,10 @@ body {
 #animation-container {
     position: relative;
     /* 市松模様のスタイル */
-    background-color: #cccccc; 
+    background-color: #333333; 
     background-image: 
-        linear-gradient(45deg, #aaaaaa 25%, transparent 25%, transparent 75%, #aaaaaa 75%, #aaaaaa), 
-        linear-gradient(45deg, #aaaaaa 25%, transparent 25%, transparent 75%, #aaaaaa 75%, #aaaaaa);
+        linear-gradient(45deg, #555555 25%, transparent 25%, transparent 75%, #555555 75%, #555555), 
+        linear-gradient(45deg, #555555 25%, transparent 25%, transparent 75%, #555555 75%, #555555);
     background-size: 20px 20px; 
     background-position: 0 0, 10px 10px; 
 }

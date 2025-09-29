@@ -34,17 +34,15 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(link.href);
     };
     
-    // 16進数カラーコードをRGBオブジェクトに変換
     const hexToRgb = (hex) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? {
             r: parseInt(result[1], 16),
             g: parseInt(result[2], 16),
             b: parseInt(result[3], 16)
-        } : { r: 0, g: 0, b: 0 }; // パース失敗時は黒を返す
+        } : { r: 0, g: 0, b: 0 };
     };
 
-    // RGB値を16進数カラーコードに変換
     const rgbToHex = (r, g, b) => '#' + [r, g, b].map(x => {
         const hex = x.toString(16);
         return hex.length === 1 ? '0' + hex : hex;
@@ -55,10 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const settings = {
         numCircles: 8,
         containerSize: 300,
-        animationInterval: 400,
+        loopTime: 1000,
         marginPercent: 10,
         rotation: 0,
-        headCount: 8,
+        headCount: 6,
         
         startCircle: {
             color: { r: 255, g: 255, b: 255, a: 1.0 },
@@ -66,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         endCircle: {
             color: { r: 0, g: 0, b: 0, a: 1.0 },
-            size: 10
+            size: 0
         },
 
         proxy: {
@@ -96,12 +94,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const frames = generateFrames();
         const frameBuffers = [];
         const delays = [];
+        // APNGのディレイも1ループの時間から計算する
+        const stepInterval = settings.numCircles > 1 ? settings.loopTime / settings.numCircles : settings.loopTime;
+        frames.forEach(() => {
+            delays.push(stepInterval);
+        });
+        
         frames.forEach(canvas => {
             const ctx = canvas.getContext('2d', { alpha: true });
             const imageData = ctx.getImageData(0, 0, settings.containerSize, settings.containerSize);
             frameBuffers.push(imageData.data.buffer);
-            delays.push(settings.animationInterval);
         });
+
         const apngBuffer = UPNG.encode(frameBuffers, settings.containerSize, settings.containerSize, 0, delays);
         const blob = new Blob([apngBuffer], { type: 'image/png' });
         downloadFile(blob, `loading_animation_${timestamp}.png`);
@@ -159,6 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
             circleElements.push(circle);
         }
 
+        // 1ループの時間と円の数から、1ステップあたりの間隔を計算
+        const stepInterval = settings.numCircles > 1 ? settings.loopTime / settings.numCircles : settings.loopTime;
+
         animationTimer = setInterval(() => {
             if (circleProps.length > 1) {
                 circleProps.push(circleProps.shift());
@@ -168,18 +175,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     circle.style.height = `${circleProps[index].size}px`;
                 });
             }
-        }, settings.animationInterval);
+        }, stepInterval); // 計算した間隔を使用
     };
     
     // --- GUIのセットアップ ---
     const gui = new lil.GUI();
     const generalFolder = gui.addFolder('基本設定');
-    generalFolder.add(settings, 'numCircles', 1, 24, 1).name('円の数 (n)').onFinishChange(regenerateAnimation);
-    generalFolder.add(settings, 'headCount', 1, 24, 1).name('先頭数 (m)').onFinishChange(regenerateAnimation);
-    generalFolder.add(settings, 'containerSize', 100, 800, 10).name('全体の大きさ').onFinishChange(regenerateAnimation);
+    generalFolder.add(settings, 'numCircles', 1, 24, 1).name('円の数').onFinishChange(regenerateAnimation);
+    generalFolder.add(settings, 'headCount', 1, 24, 1).name('先頭円の数').onFinishChange(regenerateAnimation);
+    generalFolder.add(settings, 'containerSize', 100, 1080, 10).name('全体の大きさ(px)').onFinishChange(regenerateAnimation);
     generalFolder.add(settings, 'marginPercent', 0, 100, 1).name('余白率 (%)').onFinishChange(regenerateAnimation);
     generalFolder.add(settings, 'rotation', 0, 360, 1).name('全体回転 (度)').onChange(regenerateAnimation);
-    generalFolder.add(settings, 'animationInterval', 1, 1000, 1).name('色の移動間隔 (ms)').onFinishChange(regenerateAnimation);
+    generalFolder.add(settings, 'loopTime', 100, 3000, 1).name('1ループの時間 (ms)').onFinishChange(regenerateAnimation);
 
     const startCircleFolder = gui.addFolder('先頭円');
     startCircleFolder.addColor(settings.proxy, 'startColorRGB').name('色 (RGB)')
@@ -214,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     endCircleFolder.add(settings.endCircle, 'size', 0, 100, 1).name('大きさ').onFinishChange(regenerateAnimation);
     
     const saveFolder = gui.addFolder('画像保存');
-    saveFolder.add(settings, 'saveAsZip').name('Save as ZIP');
+    saveFolder.add(settings, 'saveAsZip').name('Save as PNG(ZIP)');
     saveFolder.add(settings, 'saveAsApng').name('Save as APNG');
 
     // --- 保存処理用のフレーム生成関数 ---

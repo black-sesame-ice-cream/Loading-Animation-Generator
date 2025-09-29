@@ -1,0 +1,40 @@
+/* ページ全体の背景を透明に設定 */
+body, html {
+    background-color: transparent;
+    height: 100%;
+    margin: 0;
+    /* コンテンツをページの中央に配置 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* アニメーションのコンテナ */
+#animation-container {
+    position: relative;
+    /* このサイズが、円が配置される大きな円の直径となる */
+    width: 300px;
+    height: 300px;
+}
+
+/* 各円の共通スタイル */
+.circle {
+    position: absolute;
+    /* 円の直径 */
+    width: 50px;
+    height: 50px;
+    /* 円形にする */
+    border-radius: 50%;
+    /* 位置計算の基準点を中心にする */
+    transform: translate(-50%, -50%);
+}
+
+/* 保存ボタンのスタイル */
+button {
+    margin-top: 30px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}

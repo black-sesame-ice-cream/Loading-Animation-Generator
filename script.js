@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         imageSrc: null,
         imageElement: null,
         imageFilename: null,
-        colorMode: 'silhouette',
+        colorMode: 'original',
         imageOrientation: 'fixed',
 
         loadImage: () => {

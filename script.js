@@ -4,8 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Global Variables ---
     let animationTimer;
-    let elements = [];
+    let elements = []; // Will store { container, outline, image } objects
     let guiControllers = {};
+    const DEFAULT_CIRCLE_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGESURBVHhe7doxAQAwEAOh+jed9B8sHIqAH9szHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB4wHhABj2sBGguLA1cAAAAASUVORK5CYII=';
+    const DEFAULT_STICK_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEVSURBVHhe7dihAcAwEATR/p/2b3hIQUjYvYc8s2sDIDMAmQDIBCATgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgMwAZg4sBjd4fI82nAAAAAElFTkSuQmCC';
 
     // --- Helper Functions ---
     const getTimestamp = () => {
@@ -48,30 +50,42 @@ document.addEventListener('DOMContentLoaded', () => {
         rotation: 0,
         headCount: 6,
         
-        startCircle: {
-            color: { r: 155, g: 155, b: 155, a: 1.0 },
+        startElement: {
+            tintColor: { r: 155, g: 155, b: 155 },
+            tintAlpha: 1.0,
+            opacity: 1.0,
             size: 50
         },
-        endCircle: {
-            color: { r: 50, g: 50, b: 50, a: 1.0 },
+        endElement: {
+            tintColor: { r: 50, g: 50, b: 50 },
+            tintAlpha: 0.0,
+            opacity: 1.0,
             size: 0
         },
 
+        outline: {
+            enable: false,
+            color: { r: 255, g: 255, b: 255 },
+            width: 5 
+        },
+
         proxy: {
-            startColorRGB: rgbToHex(155, 155, 155),
-            startColorAlpha: 1.0,
-            endColorRGB: rgbToHex(50, 50, 50),
-            endColorAlpha: 1.0
+            startTintColorRGB: rgbToHex(155, 155, 155),
+            startTintAlpha: 1.0,
+            startOpacity: 1.0,
+            endTintColorRGB: rgbToHex(50, 50, 50),
+            endTintAlpha: 0.0,
+            endOpacity: 1.0,
+            outlineColorRGB: rgbToHex(255, 255, 255)
         },
         
-        useImage: false,
-        imageSrc: null,
-        imageElement: null,
+        userUploadedImageElement: null,
+        defaultCircleElement: null,
+        defaultStickElement: null,
         imageFilename: null,
-        colorMode: 'original',
         imageOrientation: 'fixed',
 
-        loadImage: () => {
+        uploadImage: () => {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/png';
@@ -83,10 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 reader.onload = res => {
                     const img = new Image();
                     img.onload = () => {
-                        settings.imageElement = img;
-                        settings.imageSrc = res.target.result;
-                        settings.useImage = true;
-                        guiControllers.useImage.updateDisplay();
+                        settings.userUploadedImageElement = img;
+                        settings.outline.enable = false;
+                        guiControllers.enableOutline.updateDisplay();
                         regenerateAnimation();
                     };
                     img.src = res.target.result;
@@ -95,12 +108,18 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             input.click();
         },
-        removeImage: () => {
-            settings.useImage = false;
-            settings.imageSrc = null;
-            settings.imageElement = null;
-            settings.imageFilename = null;
-            guiControllers.useImage.updateDisplay();
+        useDefaultCircle: () => {
+            settings.userUploadedImageElement = null;
+            settings.imageFilename = 'circle.png';
+            settings.outline.enable = false;
+            guiControllers.enableOutline.updateDisplay();
+            regenerateAnimation();
+        },
+        useDefaultStick: () => {
+            settings.userUploadedImageElement = null;
+            settings.imageFilename = 'stick.png';
+            settings.outline.enable = false;
+            guiControllers.enableOutline.updateDisplay();
             regenerateAnimation();
         },
 
@@ -133,46 +152,83 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadFile(new Blob([apngBuffer], { type: 'image/png' }), `loading_animation_${timestamp}.png`);
     });
 
-    const createTintedImage = (image, color) => {
+    const applyTint = (image, tintColor, tintAlpha) => {
         const canvas = document.createElement('canvas');
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
+        const width = image.naturalWidth || image.width;
+        const height = image.naturalHeight || image.height;
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
         ctx.drawImage(image, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            if (data[i + 3] > 0) { // Apply color if not fully transparent
-                data[i] = color.r;
-                data[i + 1] = color.g;
-                data[i + 2] = color.b;
+
+        if (tintAlpha > 0) {
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i + 3] > 0) {
+                    const origR = data[i];
+                    const origG = data[i + 1];
+                    const origB = data[i + 2];
+
+                    data[i]   = tintColor.r * tintAlpha + origR * (1 - tintAlpha);
+                    data[i+1] = tintColor.g * tintAlpha + origG * (1 - tintAlpha);
+                    data[i+2] = tintColor.b * tintAlpha + origB * (1 - tintAlpha);
+                }
             }
+            ctx.putImageData(imageData, 0, 0);
         }
-        ctx.putImageData(imageData, 0, 0);
         return canvas;
     };
 
+    const createOutlineOnlyImage = (baseImage, outlineWidth, outlineColorRgb) => {
+        const sw = baseImage.width;
+        const sh = baseImage.height;
+        const padding = Math.ceil(outlineWidth);
+        const dw = sw + padding * 2;
+        const dh = sh + padding * 2;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = dw;
+        canvas.height = dh;
+        const ctx = canvas.getContext('2d');
+        
+        const silhouetteCanvas = document.createElement('canvas');
+        silhouetteCanvas.width = sw;
+        silhouetteCanvas.height = sh;
+        const silhouetteCtx = silhouetteCanvas.getContext('2d');
+        silhouetteCtx.drawImage(baseImage, 0, 0);
+        silhouetteCtx.globalCompositeOperation = 'source-in';
+        silhouetteCtx.fillStyle = `rgb(${outlineColorRgb.r}, ${outlineColorRgb.g}, ${outlineColorRgb.b})`;
+        silhouetteCtx.fillRect(0, 0, sw, sh);
+
+        const step = 1;
+        for (let y = -outlineWidth; y <= outlineWidth; y += step) {
+            for (let x = -outlineWidth; x <= outlineWidth; x += step) {
+                if (x * x + y * y <= outlineWidth * outlineWidth) {
+                    ctx.drawImage(silhouetteCanvas, padding + x, padding + y);
+                }
+            }
+        }
+        
+        return canvas;
+    };
+    
+    let propsArray = [];
+
     // --- Animation Update and Regeneration ---
     const updateGui = () => {
-        const isOriginalColor = settings.useImage && settings.colorMode === 'original';
-        guiControllers.startColorRGB.domElement.style.pointerEvents = isOriginalColor ? 'none' : 'auto';
-        guiControllers.startColorRGB.domElement.style.opacity = isOriginalColor ? 0.5 : 1;
-        guiControllers.endColorRGB.domElement.style.pointerEvents = isOriginalColor ? 'none' : 'auto';
-        guiControllers.endColorRGB.domElement.style.opacity = isOriginalColor ? 0.5 : 1;
-        
-        if (settings.useImage && settings.imageFilename) {
-            let displayName = settings.imageFilename;
-            if (displayName.length > 20) {
-                displayName = displayName.substring(0, 17) + '...';
-            }
-            guiControllers.useImage.name(`Use: ${displayName}`);
-        } else {
-            guiControllers.useImage.name('Use Image');
+        let filename = settings.imageFilename || 'circle.png';
+        if (filename.length > 20) {
+            filename = filename.substring(0, 17) + '...';
         }
-
-        guiControllers.colorMode.domElement.style.display = settings.useImage ? 'block' : 'none';
-        guiControllers.imageOrientation.domElement.style.display = settings.useImage ? 'block' : 'none';
-        guiControllers.removeImage.domElement.style.display = settings.useImage ? 'block' : 'none';
+        guiControllers.imageFilename.name(`Current: ${filename}`);
+        
+        const hasUserImage = !!settings.userUploadedImageElement;
+        guiControllers.useDefaultCircle.domElement.style.display = hasUserImage ? 'block' : 'none';
+        guiControllers.useDefaultStick.domElement.style.display = hasUserImage ? 'block' : 'none';
+        guiControllers.imageOrientation.domElement.style.display = hasUserImage ? 'block' : 'none';
     };
 
     const regenerateAnimation = () => {
@@ -181,104 +237,136 @@ document.addEventListener('DOMContentLoaded', () => {
         elements = [];
         
         updateGui();
-
-        const propsArray = [];
-        container.style.width = `${settings.containerSize}px`;
-        container.style.height = `${settings.containerSize}px`;
-
-        const maxElementSize = Math.max(settings.startCircle.size, settings.endCircle.size);
-        const orbitDiameter = settings.containerSize - maxElementSize - (settings.containerSize * (settings.marginPercent / 100));
-        const RADIUS = Math.max(0, orbitDiameter / 2);
         
-        const rotationInRadians = settings.rotation * (Math.PI / 180);
-        const start = settings.startCircle;
-        const end = settings.endCircle;
+        propsArray = [];
+        const start = settings.startElement;
+        const end = settings.endElement;
         const n = settings.numCircles;
         const m = settings.headCount;
         const gradientLength = Math.min(n, m);
 
         for (let i = 0; i < n; i++) {
-            let r, g, b, a, size;
+            let r, g, b, tintAlpha, opacity, size;
             if (i < gradientLength) {
                 const ratio = (gradientLength <= 1) ? 0 : i / (gradientLength - 1);
-                r = Math.round(start.color.r + (end.color.r - start.color.r) * ratio);
-                g = Math.round(start.color.g + (end.color.g - start.color.g) * ratio);
-                b = Math.round(start.color.b + (end.color.b - start.color.b) * ratio);
-                a = start.color.a + (end.color.a - start.color.a) * ratio;
+                r = Math.round(start.tintColor.r + (end.tintColor.r - start.tintColor.r) * ratio);
+                g = Math.round(start.tintColor.g + (end.tintColor.g - start.tintColor.g) * ratio);
+                b = Math.round(start.tintColor.b + (end.tintColor.b - start.tintColor.b) * ratio);
+                tintAlpha = start.tintAlpha + (end.tintAlpha - start.tintAlpha) * ratio;
+                opacity = start.opacity + (end.opacity - start.opacity) * ratio;
                 size = start.size + (end.size - start.size) * ratio;
             } else {
-                r = end.color.r; g = end.color.g; b = end.color.b; a = end.color.a;
+                r = end.tintColor.r; g = end.tintColor.g; b = end.tintColor.b;
+                tintAlpha = end.tintAlpha;
+                opacity = end.opacity;
                 size = end.size;
             }
-            propsArray.push({ color: {r,g,b,a}, size: size });
-        }
-
-        const tintedImageDataUrlCache = {};
-        if (settings.useImage && settings.colorMode === 'silhouette' && settings.imageElement) {
-            propsArray.forEach(prop => {
-                const colorKey = `rgb(${prop.color.r},${prop.color.g},${prop.color.b})`;
-                if (!tintedImageDataUrlCache[colorKey]) {
-                    const tintedCanvas = createTintedImage(settings.imageElement, prop.color);
-                    tintedImageDataUrlCache[colorKey] = tintedCanvas.toDataURL();
-                }
-            });
-        }
-
-        for (let i = 0; i < n; i++) {
-            const angle = (n > 0) ? -(i / n) * 2 * Math.PI - Math.PI / 2 + rotationInRadians : 0;
-            const x = settings.containerSize / 2 + RADIUS * Math.cos(angle);
-            const y = settings.containerSize / 2 + RADIUS * Math.sin(angle);
-            const el = document.createElement('div');
-            el.style.left = `${x}px`;
-            el.style.top = `${y}px`;
-
-            if (settings.useImage && settings.imageOrientation === 'center') {
-                const rotationInRad = angle + Math.PI / 2;
-                el.style.transform = `translate(-50%, -50%) rotate(${rotationInRad}rad)`;
-            } else {
-                el.style.transform = 'translate(-50%, -50%)';
-            }
-
-            container.appendChild(el);
-            elements.push(el);
+            propsArray.push({ tintColor: {r,g,b}, tintAlpha, opacity, size });
         }
         
-        const updateElements = (props) => {
-            elements.forEach((el, index) => {
-                const currentProps = props[index];
-                if (settings.useImage && settings.imageSrc) {
-                    el.className = 'image-element';
-                    const img = settings.imageElement;
-                    const scale = currentProps.size / Math.max(img.width, img.height);
-                    el.style.width = `${img.width * scale}px`;
-                    el.style.height = `${img.height * scale}px`;
-                    el.style.opacity = currentProps.color.a;
+        let sourceImage;
+        if(settings.imageFilename === 'stick.png') {
+            sourceImage = settings.defaultStickElement;
+        } else if (settings.userUploadedImageElement) {
+            sourceImage = settings.userUploadedImageElement;
+        } else {
+            sourceImage = settings.defaultCircleElement;
+        }
 
-                    if (settings.colorMode === 'silhouette') {
-                        const colorKey = `rgb(${currentProps.color.r},${currentProps.color.g},${currentProps.color.b})`;
-                        el.style.backgroundImage = `url(${tintedImageDataUrlCache[colorKey]})`;
-                        el.style.backgroundColor = 'transparent';
-                    } else {
-                        el.style.backgroundColor = 'transparent';
-                         el.style.backgroundImage = `url(${settings.imageSrc})`;
-                    }
-                } else {
-                    el.className = 'circle';
-                    el.style.width = `${currentProps.size}px`;
-                    el.style.height = `${currentProps.size}px`;
-                    el.style.backgroundColor = `rgba(${currentProps.color.r}, ${currentProps.color.g}, ${currentProps.color.b}, ${currentProps.color.a})`;
-                    el.style.backgroundImage = 'none';
+        let maxElementSize = Math.max(settings.startElement.size, settings.endElement.size);
+        if (settings.outline.enable) {
+            maxElementSize += settings.outline.width * 2;
+        }
+        const orbitDiameter = settings.containerSize - maxElementSize - (settings.containerSize * (settings.marginPercent / 100));
+        const RADIUS = Math.max(0, orbitDiameter / 2);
+        
+        const rotationInRadians = settings.rotation * (Math.PI / 180);
+
+        const outlineOnlyImageURL = settings.outline.enable ? createOutlineOnlyImage(sourceImage, settings.outline.width, settings.outline.color).toDataURL() : null;
+
+        const tintedImageCache = {};
+        propsArray.forEach(prop => {
+            const colorKey = `rgba(${prop.tintColor.r},${prop.tintColor.g},${prop.tintColor.b},${prop.tintAlpha.toFixed(2)})`;
+            if (!tintedImageCache[colorKey]) {
+                const tintedCanvas = applyTint(sourceImage, prop.tintColor, prop.tintAlpha);
+                tintedImageCache[colorKey] = tintedCanvas.toDataURL();
+            }
+        });
+
+        for (let i = 0; i < settings.numCircles; i++) {
+            const elementContainer = document.createElement('div');
+            elementContainer.className = 'element-container';
+            
+            let outlineLayer = null;
+            if (settings.outline.enable) {
+                outlineLayer = document.createElement('div');
+                outlineLayer.className = 'outline-layer';
+                outlineLayer.style.backgroundImage = `url(${outlineOnlyImageURL})`;
+                elementContainer.appendChild(outlineLayer);
+            }
+            
+            const imageLayer = document.createElement('div');
+            imageLayer.className = 'image-layer';
+            elementContainer.appendChild(imageLayer);
+
+            container.appendChild(elementContainer);
+            elements.push({ container: elementContainer, outline: outlineLayer, image: imageLayer });
+        }
+        
+        const updateElements = (localPropsArray) => {
+            elements.forEach((el, index) => {
+                const currentProps = localPropsArray[index];
+                const scale = currentProps.size / Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight);
+                
+                const imageWidth = sourceImage.naturalWidth * scale;
+                const imageHeight = sourceImage.naturalHeight * scale;
+                
+                let containerWidth = imageWidth;
+                let containerHeight = imageHeight;
+                
+                if(el.outline){
+                     containerWidth += settings.outline.width * 2;
+                     containerHeight += settings.outline.width * 2;
                 }
+
+                el.container.style.width = `${containerWidth}px`;
+                el.container.style.height = `${containerHeight}px`;
+                el.container.style.opacity = currentProps.opacity;
+                
+                const angle = (settings.numCircles > 0) ? -(index / settings.numCircles) * 2 * Math.PI - Math.PI / 2 + rotationInRadians : 0;
+                const x = settings.containerSize / 2 + RADIUS * Math.cos(angle);
+                const y = settings.containerSize / 2 + RADIUS * Math.sin(angle);
+
+                el.container.style.left = `${x}px`;
+                el.container.style.top = `${y}px`;
+
+                if (settings.imageOrientation === 'center' && settings.userUploadedImageElement) {
+                    const rotationInRad = angle + Math.PI / 2;
+                    el.container.style.transform = `translate(-50%, -50%) rotate(${rotationInRad}rad)`;
+                } else {
+                    el.container.style.transform = `translate(-50%, -50%)`;
+                }
+                
+                if (el.outline) {
+                    el.outline.style.width = '100%';
+                    el.outline.style.height = '100%';
+                }
+                
+                el.image.style.width = `${imageWidth}px`;
+                el.image.style.height = `${imageHeight}px`;
+                const colorKey = `rgba(${currentProps.tintColor.r},${currentProps.tintColor.g},${currentProps.tintColor.b},${currentProps.tintAlpha.toFixed(2)})`;
+                el.image.style.backgroundImage = `url(${tintedImageCache[colorKey]})`;
             });
         };
         
-        updateElements(propsArray);
+        let animationProps = [...propsArray];
+        updateElements(animationProps);
 
         const stepInterval = settings.numCircles > 1 ? settings.loopTime / settings.numCircles : settings.loopTime;
         animationTimer = setInterval(() => {
-            if (propsArray.length > 1) {
-                propsArray.push(propsArray.shift());
-                updateElements(propsArray);
+            if (animationProps.length > 1) {
+                animationProps.push(animationProps.shift());
+                updateElements(animationProps);
             }
         }, stepInterval);
     };
@@ -293,36 +381,52 @@ document.addEventListener('DOMContentLoaded', () => {
     generalFolder.add(settings, 'rotation', 0, 360, 1).name('Global Rotation (deg)').onChange(regenerateAnimation);
     generalFolder.add(settings, 'loopTime', 100, 3000, 1).name('Loop Time (ms)').onFinishChange(regenerateAnimation);
 
-    const startCircleFolder = gui.addFolder('Start Element');
-    guiControllers.startColorRGB = startCircleFolder.addColor(settings.proxy, 'startColorRGB').name('Color (RGB)')
+    const startFolder = gui.addFolder('Start Element');
+    startFolder.addColor(settings.proxy, 'startTintColorRGB').name('Tint Color (RGB)')
         .onFinishChange(value => {
-            const rgb = hexToRgb(value);
-            settings.startCircle.color.r = rgb.r; settings.startCircle.color.g = rgb.g; settings.startCircle.color.b = rgb.b;
+            settings.startElement.tintColor = hexToRgb(value);
             regenerateAnimation();
         });
-    startCircleFolder.add(settings.proxy, 'startColorAlpha', 0, 1, 0.01).name('Opacity (Alpha)').onFinishChange(value => {
-        settings.startCircle.color.a = value; regenerateAnimation();
+    startFolder.add(settings.proxy, 'startTintAlpha', 0, 1, 0.01).name('Tint Alpha').onFinishChange(value => {
+        settings.startElement.tintAlpha = value; regenerateAnimation();
     });
-    startCircleFolder.add(settings.startCircle, 'size', 0, 200, 1).name('Size').onFinishChange(regenerateAnimation);
+    startFolder.add(settings.proxy, 'startOpacity', 0, 1, 0.01).name('Opacity').onFinishChange(value => {
+        settings.startElement.opacity = value; regenerateAnimation();
+    });
+    startFolder.add(settings.startElement, 'size', 0, 200, 1).name('Size').onFinishChange(regenerateAnimation);
 
-    const endCircleFolder = gui.addFolder('End Element');
-    guiControllers.endColorRGB = endCircleFolder.addColor(settings.proxy, 'endColorRGB').name('Color (RGB)')
+    const endFolder = gui.addFolder('End Element');
+    endFolder.addColor(settings.proxy, 'endTintColorRGB').name('Tint Color (RGB)')
         .onFinishChange(value => {
-            const rgb = hexToRgb(value);
-            settings.endCircle.color.r = rgb.r; settings.endCircle.color.g = rgb.g; settings.endCircle.color.b = rgb.b;
+            settings.endElement.tintColor = hexToRgb(value);
             regenerateAnimation();
         });
-    endCircleFolder.add(settings.proxy, 'endColorAlpha', 0, 1, 0.01).name('Opacity (Alpha)').onFinishChange(value => {
-        settings.endCircle.color.a = value; regenerateAnimation();
+    endFolder.add(settings.proxy, 'endTintAlpha', 0, 1, 0.01).name('Tint Alpha').onFinishChange(value => {
+        settings.endElement.tintAlpha = value; regenerateAnimation();
     });
-    endCircleFolder.add(settings.endCircle, 'size', 0, 200, 1).name('Size').onFinishChange(regenerateAnimation);
+     endFolder.add(settings.proxy, 'endOpacity', 0, 1, 0.01).name('Opacity').onFinishChange(value => {
+        settings.endElement.opacity = value; regenerateAnimation();
+    });
+    endFolder.add(settings.endElement, 'size', 0, 200, 1).name('Size').onFinishChange(regenerateAnimation);
 
     const imageFolder = gui.addFolder('Image Settings');
-    imageFolder.add(settings, 'loadImage').name('Select Image...');
-    guiControllers.useImage = imageFolder.add(settings, 'useImage').name('Use Image').onFinishChange(regenerateAnimation);
-    guiControllers.colorMode = imageFolder.add(settings, 'colorMode', ['silhouette', 'original']).name('Color Mode').onFinishChange(regenerateAnimation);
+    imageFolder.add(settings, 'uploadImage').name('Upload Custom Image...');
+    guiControllers.useDefaultCircle = imageFolder.add(settings, 'useDefaultCircle').name('Use Default Circle');
+    guiControllers.useDefaultStick = imageFolder.add(settings, 'useDefaultStick').name('Use Default Stick');
+    guiControllers.imageFilename = imageFolder.add({filename: ''}, 'filename').name('Current:').listen();
+    guiControllers.imageFilename.domElement.style.pointerEvents = 'none';
     guiControllers.imageOrientation = imageFolder.add(settings, 'imageOrientation', ['fixed', 'center']).name('Image Orientation').onFinishChange(regenerateAnimation);
-    guiControllers.removeImage = imageFolder.add(settings, 'removeImage').name('Remove Image');
+
+    const outlineFolder = gui.addFolder('Outline Settings');
+    guiControllers.enableOutline = outlineFolder.add(settings.outline, 'enable').name('Enable Outline').onFinishChange(regenerateAnimation);
+    outlineFolder.addColor(settings.proxy, 'outlineColorRGB').name('Color (RGB)')
+        .onFinishChange(value => {
+            settings.outline.color = hexToRgb(value);
+            if(settings.outline.enable) regenerateAnimation();
+        });
+    outlineFolder.add(settings.outline, 'width', 0, 25, 0.1).name('Width (px)').onFinishChange(()=> {
+        if(settings.outline.enable) regenerateAnimation();
+    });
     
     const saveFolder = gui.addFolder('Export');
     saveFolder.add(settings, 'saveAsZip').name('Save as PNG (ZIP)');
@@ -332,42 +436,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const generateFrames = async () => {
         const frames = [];
         const n = settings.numCircles;
-
-        // Calculate gradient properties
-        const start = settings.startCircle;
-        const end = settings.endCircle;
-        const m = settings.headCount;
-        const gradientLength = Math.min(n, m);
-        let propsArray = [];
-        for (let i = 0; i < n; i++) {
-            let r, g, b, a, size;
-             if (i < gradientLength) {
-                const ratio = (gradientLength <= 1) ? 0 : i / (gradientLength - 1);
-                r = Math.round(start.color.r + (end.color.r - start.color.r) * ratio);
-                g = Math.round(start.color.g + (end.color.g - start.color.g) * ratio);
-                b = Math.round(start.color.b + (end.color.b - start.color.b) * ratio);
-                a = start.color.a + (end.color.a - start.color.a) * ratio;
-                size = start.size + (end.size - start.size) * ratio;
-            } else {
-                r = end.color.r; g = end.color.g; b = end.color.b; a = end.color.a;
-                size = end.size;
-            }
-            propsArray.push({ color: {r,g,b,a}, size: size });
+        let frameProps = [...propsArray];
+        
+        let sourceImage;
+        if(settings.imageFilename === 'stick.png') {
+            sourceImage = settings.defaultStickElement;
+        } else {
+            sourceImage = settings.userUploadedImageElement || settings.defaultCircleElement;
         }
 
-        const maxElementSize = Math.max(start.size, end.size);
+        let maxElementSize = Math.max(settings.startElement.size, settings.endElement.size);
+         if (settings.outline.enable) {
+            maxElementSize += settings.outline.width * 2;
+        }
         const orbitDiameter = settings.containerSize - maxElementSize - (settings.containerSize * (settings.marginPercent / 100));
         const RADIUS = Math.max(0, orbitDiameter / 2);
         const rotationInRadians = settings.rotation * (Math.PI / 180);
         
-        // Tinted image cache for silhouette mode
+        const outlineImage = settings.outline.enable ? createOutlineOnlyImage(sourceImage, settings.outline.width, settings.outline.color) : null;
+        
         const tintedImageCache = {};
-        if (settings.useImage && settings.colorMode === 'silhouette' && settings.imageElement) {
-             for (const prop of propsArray) {
-                const colorKey = `rgb(${prop.color.r},${prop.color.g},${prop.color.b})`;
-                if (!tintedImageCache[colorKey]) {
-                    tintedImageCache[colorKey] = createTintedImage(settings.imageElement, prop.color);
-                }
+        for (const prop of frameProps) {
+            const colorKey = `rgba(${prop.tintColor.r},${prop.tintColor.g},${prop.tintColor.b},${prop.tintAlpha.toFixed(2)})`;
+            if (!tintedImageCache[colorKey]) {
+                tintedImageCache[colorKey] = applyTint(sourceImage, prop.tintColor, prop.tintAlpha);
             }
         }
 
@@ -381,52 +473,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 const angle = (n > 0) ? -(j / n) * 2 * Math.PI - Math.PI / 2 + rotationInRadians : 0;
                 const x = settings.containerSize / 2 + RADIUS * Math.cos(angle);
                 const y = settings.containerSize / 2 + RADIUS * Math.sin(angle);
-                const props = propsArray[j];
+                const props = frameProps[j];
+                const scale = props.size / Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight);
                 
-                if (settings.useImage && settings.imageElement) {
-                    const img = settings.imageElement;
-                    const scale = props.size / Math.max(img.naturalWidth, img.naturalHeight);
-                    const w = img.naturalWidth * scale;
-                    const h = img.naturalHeight * scale;
-                    ctx.globalAlpha = props.color.a;
-                    
-                    ctx.save();
-                    ctx.translate(x, y);
+                ctx.save();
+                ctx.translate(x, y);
 
-                    if (settings.imageOrientation === 'center') {
-                        const rotationInRad = angle + Math.PI / 2;
-                        ctx.rotate(rotationInRad);
-                    }
-
-                    let imageToDraw;
-                    if (settings.colorMode === 'silhouette') {
-                        const colorKey = `rgb(${props.color.r},${props.color.g},${props.color.b})`;
-                        imageToDraw = tintedImageCache[colorKey];
-                    } else {
-                        imageToDraw = img;
-                    }
-                    
-                    ctx.drawImage(imageToDraw, -w / 2, -h / 2, w, h);
-                    ctx.restore();
-
-                    ctx.globalAlpha = 1.0;
-                } else {
-                    ctx.beginPath();
-                    ctx.arc(x, y, props.size / 2, 0, 2 * Math.PI);
-                    ctx.fillStyle = `rgba(${props.color.r}, ${props.color.g}, ${props.color.b}, ${props.color.a})`;
-                    ctx.fill();
+                if (settings.imageOrientation === 'center' && settings.userUploadedImageElement) {
+                    const rotationInRad = angle + Math.PI / 2;
+                    ctx.rotate(rotationInRad);
                 }
+
+                ctx.globalAlpha = props.opacity;
+
+                // Draw Outline Layer
+                if (outlineImage) {
+                    const outlineW = outlineImage.width * scale;
+                    const outlineH = outlineImage.height * scale;
+                    ctx.drawImage(outlineImage, -outlineW / 2, -outlineH / 2, outlineW, outlineH);
+                }
+
+                // Draw Image Layer
+                const colorKey = `rgba(${props.tintColor.r},${props.tintColor.g},${props.tintColor.b},${props.tintAlpha.toFixed(2)})`;
+                const imageToDraw = tintedImageCache[colorKey];
+                const w = imageToDraw.width * scale;
+                const h = imageToDraw.height * scale;
+                ctx.drawImage(imageToDraw, -w / 2, -h / 2, w, h);
+
+                ctx.restore();
             }
             frames.push(canvas);
 
-            if (propsArray.length > 1) {
-                propsArray.push(propsArray.shift());
+            if (frameProps.length > 1) {
+                frameProps.push(frameProps.shift());
             }
         }
         return frames;
     };
 
     // --- Initial Run ---
-    regenerateAnimation();
+    const defaultCircleImg = new Image();
+    defaultCircleImg.onload = () => {
+        settings.defaultCircleElement = defaultCircleImg;
+        const defaultStickImg = new Image();
+        defaultStickImg.onload = () => {
+            settings.defaultStickElement = defaultStickImg;
+            regenerateAnimation();
+        };
+        defaultStickImg.src = DEFAULT_STICK_IMAGE;
+    };
+    defaultCircleImg.src = DEFAULT_CIRCLE_IMAGE;
 });
-

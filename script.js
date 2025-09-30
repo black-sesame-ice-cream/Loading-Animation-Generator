@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startCircleFolder.add(settings.proxy, 'startColorAlpha', 0, 1, 0.01).name('Opacity (Alpha)').onFinishChange(value => {
         settings.startCircle.color.a = value; regenerateAnimation();
     });
-    startCircleFolder.add(settings.startCircle, 'size', 0, 100, 1).name('Size').onFinishChange(regenerateAnimation);
+    startCircleFolder.add(settings.startCircle, 'size', 0, 200, 1).name('Size').onFinishChange(regenerateAnimation);
 
     const endCircleFolder = gui.addFolder('End Element');
     guiControllers.endColorRGB = endCircleFolder.addColor(settings.proxy, 'endColorRGB').name('Color (RGB)')
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     endCircleFolder.add(settings.proxy, 'endColorAlpha', 0, 1, 0.01).name('Opacity (Alpha)').onFinishChange(value => {
         settings.endCircle.color.a = value; regenerateAnimation();
     });
-    endCircleFolder.add(settings.endCircle, 'size', 0, 100, 1).name('Size').onFinishChange(regenerateAnimation);
+    endCircleFolder.add(settings.endCircle, 'size', 0, 200, 1).name('Size').onFinishChange(regenerateAnimation);
 
     const imageFolder = gui.addFolder('Image Settings');
     imageFolder.add(settings, 'loadImage').name('Select Image...');

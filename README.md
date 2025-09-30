@@ -10,6 +10,12 @@ This is a web tool for generating loading animations. You can customize the numb
 ## 概要
 これはローディングアニメーションを生成するためのWebツールです。要素の数、大きさ、色、動きをカスタマイズして、独自のアニメーションを作成できます。アニメーションの要素として、シンプルな円とユーザーがアップロードしたPNG画像の両方をサポートしています。作成したアニメーションは、連番のPNG画像（ZIPファイル形式）またはAPNGファイルとしてエクスポートできます。
 
+## Recommended Environment
+This tool is designed for use on a PC with the Google Chrome browser. Operation on other devices or browsers is not guaranteed.
+
+## 推奨環境
+このツールは、PC上のGoogle Chromeブラウザでの使用を想定しています。他のデバイスやブラウザでの動作は保証されていません。
+
 ## Demo
 You can try this tool on the page below.
 

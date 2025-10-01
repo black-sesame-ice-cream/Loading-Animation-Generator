@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let elements = []; // Will store { container, outline, image } objects
     let guiControllers = {};
     const DEFAULT_CIRCLE_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGESURBVHhe7doxAQAwEAOh+jed9B8sHIqAH9szHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB4wHhABj2sBGguLA1cAAAAASUVORK5CYII=';
-    const DEFAULT_STICK_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEVSURBVHhe7dihAcAwEATR/p/2b3hIQUjYvYc8s2sDIDMAmQDIBCATgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgMwAZg4sBjd4fI82nAAAAAElFTkSuQmCC';
+    const DEFAULT_STICK_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEVSURBVHhe7dihAcAwEATR/p/2b3hIQUjYvYc8s2sDIDMAmQDIBCATgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgMwAZg4sBjd4fI82nAAAAAElFTSuQmCC';
 
     // --- Helper Functions ---
     const getTimestamp = () => {
@@ -54,13 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
             tintColor: { r: 155, g: 155, b: 155 },
             tintAlpha: 1.0,
             opacity: 1.0,
-            size: 50
+            size: 50 // Percentage
         },
         endElement: {
             tintColor: { r: 50, g: 50, b: 50 },
             tintAlpha: 0.0,
             opacity: 1.0,
-            size: 0
+            size: 0 // Percentage
         },
 
         outline: {
@@ -152,6 +152,47 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadFile(new Blob([apngBuffer], { type: 'image/png' }), `loading_animation_${timestamp}.png`);
     });
 
+    const trimImage = (image) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const w = image.naturalWidth || image.width;
+        const h = image.naturalHeight || image.height;
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(image, 0, 0);
+
+        const data = ctx.getImageData(0, 0, w, h).data;
+        let top = h, bottom = 0, left = w, right = 0;
+        let found = false;
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (data[(y * w + x) * 4 + 3] > 0) {
+                    top = Math.min(top, y);
+                    bottom = Math.max(bottom, y);
+                    left = Math.min(left, x);
+                    right = Math.max(right, x);
+                    found = true;
+                }
+            }
+        }
+
+        if (!found) {
+            const emptyCanvas = document.createElement('canvas');
+            emptyCanvas.width = 1;
+            emptyCanvas.height = 1;
+            return emptyCanvas;
+        }
+
+        const trimW = right - left + 1;
+        const trimH = bottom - top + 1;
+        const trimmedCanvas = document.createElement('canvas');
+        trimmedCanvas.width = trimW;
+        trimmedCanvas.height = trimH;
+        trimmedCanvas.getContext('2d').drawImage(canvas, left, top, trimW, trimH, 0, 0, trimW, trimH);
+        return trimmedCanvas;
+    };
+
     const applyTint = (image, tintColor, tintAlpha) => {
         const canvas = document.createElement('canvas');
         const width = image.naturalWidth || image.width;
@@ -181,8 +222,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return canvas;
     };
-
-    const createOutlineOnlyImage = (baseImage, outlineWidth, outlineColorRgb) => {
+    
+    const createHollowOutline = (baseImage, outlineWidth, outlineColorRgb) => {
         const sw = baseImage.width;
         const sh = baseImage.height;
         const padding = Math.ceil(outlineWidth);
@@ -211,6 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+        
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.drawImage(baseImage, padding, padding);
         
         return canvas;
     };
@@ -272,23 +316,29 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             sourceImage = settings.defaultCircleElement;
         }
+        
+        const trimmedImage = trimImage(sourceImage);
 
-        let maxElementSize = Math.max(settings.startElement.size, settings.endElement.size);
+        const maxBodyPixelSize = settings.containerSize * (Math.max(start.size, end.size) / 100);
+        let maxTotalPixelSize = maxBodyPixelSize;
         if (settings.outline.enable) {
-            maxElementSize += settings.outline.width * 2;
+            const scale = maxBodyPixelSize > 0 ? maxBodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height) : 0;
+            maxTotalPixelSize += settings.outline.width * 2 * scale;
         }
-        const orbitDiameter = settings.containerSize - maxElementSize - (settings.containerSize * (settings.marginPercent / 100));
+        
+        const orbitDiameter = settings.containerSize - maxTotalPixelSize - (settings.containerSize * (settings.marginPercent / 100));
         const RADIUS = Math.max(0, orbitDiameter / 2);
         
         const rotationInRadians = settings.rotation * (Math.PI / 180);
 
-        const outlineOnlyImageURL = settings.outline.enable ? createOutlineOnlyImage(sourceImage, settings.outline.width, settings.outline.color).toDataURL() : null;
+        const hollowOutlineCanvas = settings.outline.enable ? createHollowOutline(trimmedImage, settings.outline.width, settings.outline.color) : null;
+        const hollowOutlineURL = hollowOutlineCanvas ? hollowOutlineCanvas.toDataURL() : null;
 
         const tintedImageCache = {};
         propsArray.forEach(prop => {
             const colorKey = `rgba(${prop.tintColor.r},${prop.tintColor.g},${prop.tintColor.b},${prop.tintAlpha.toFixed(2)})`;
             if (!tintedImageCache[colorKey]) {
-                const tintedCanvas = applyTint(sourceImage, prop.tintColor, prop.tintAlpha);
+                const tintedCanvas = applyTint(trimmedImage, prop.tintColor, prop.tintAlpha);
                 tintedImageCache[colorKey] = tintedCanvas.toDataURL();
             }
         });
@@ -301,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (settings.outline.enable) {
                 outlineLayer = document.createElement('div');
                 outlineLayer.className = 'outline-layer';
-                outlineLayer.style.backgroundImage = `url(${outlineOnlyImageURL})`;
+                outlineLayer.style.backgroundImage = `url(${hollowOutlineURL})`;
                 elementContainer.appendChild(outlineLayer);
             }
             
@@ -316,17 +366,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const updateElements = (localPropsArray) => {
             elements.forEach((el, index) => {
                 const currentProps = localPropsArray[index];
-                const scale = currentProps.size / Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight);
+                const bodyPixelSize = settings.containerSize * (currentProps.size / 100);
+                const scale = bodyPixelSize > 0 ? bodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height) : 0;
                 
-                const imageWidth = sourceImage.naturalWidth * scale;
-                const imageHeight = sourceImage.naturalHeight * scale;
+                const imageWidth = trimmedImage.width * scale;
+                const imageHeight = trimmedImage.height * scale;
                 
-                let containerWidth = imageWidth;
-                let containerHeight = imageHeight;
-                
+                let containerWidth, containerHeight;
+
                 if(el.outline){
-                     containerWidth += settings.outline.width * 2;
-                     containerHeight += settings.outline.width * 2;
+                    containerWidth = hollowOutlineCanvas.width * scale;
+                    containerHeight = hollowOutlineCanvas.height * scale;
+                } else {
+                    containerWidth = imageWidth;
+                    containerHeight = imageHeight;
                 }
 
                 el.container.style.width = `${containerWidth}px`;
@@ -380,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
     generalFolder.add(settings, 'marginPercent', 0, 100, 1).name('Margin (%)').onFinishChange(regenerateAnimation);
     generalFolder.add(settings, 'rotation', 0, 360, 1).name('Global Rotation (deg)').onChange(regenerateAnimation);
     generalFolder.add(settings, 'loopTime', 100, 3000, 1).name('Loop Time (ms)').onFinishChange(regenerateAnimation);
-
+    
     const startFolder = gui.addFolder('Start Element');
     startFolder.addColor(settings.proxy, 'startTintColorRGB').name('Tint Color (RGB)')
         .onFinishChange(value => {
@@ -393,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startFolder.add(settings.proxy, 'startOpacity', 0, 1, 0.01).name('Opacity').onFinishChange(value => {
         settings.startElement.opacity = value; regenerateAnimation();
     });
-    startFolder.add(settings.startElement, 'size', 0, 200, 1).name('Size').onFinishChange(regenerateAnimation);
+    startFolder.add(settings.startElement, 'size', 0, 100, 1).name('Size (%)').onFinishChange(regenerateAnimation);
 
     const endFolder = gui.addFolder('End Element');
     endFolder.addColor(settings.proxy, 'endTintColorRGB').name('Tint Color (RGB)')
@@ -407,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
      endFolder.add(settings.proxy, 'endOpacity', 0, 1, 0.01).name('Opacity').onFinishChange(value => {
         settings.endElement.opacity = value; regenerateAnimation();
     });
-    endFolder.add(settings.endElement, 'size', 0, 200, 1).name('Size').onFinishChange(regenerateAnimation);
+    endFolder.add(settings.endElement, 'size', 0, 100, 1).name('Size (%)').onFinishChange(regenerateAnimation);
 
     const imageFolder = gui.addFolder('Image Settings');
     imageFolder.add(settings, 'uploadImage').name('Upload Custom Image...');
@@ -424,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
             settings.outline.color = hexToRgb(value);
             if(settings.outline.enable) regenerateAnimation();
         });
-    outlineFolder.add(settings.outline, 'width', 0, 25, 0.1).name('Width (px)').onFinishChange(()=> {
+    outlineFolder.add(settings.outline, 'width', 0, 50, 0.1).name('Width (px)').onFinishChange(()=> {
         if(settings.outline.enable) regenerateAnimation();
     });
     
@@ -441,25 +494,32 @@ document.addEventListener('DOMContentLoaded', () => {
         let sourceImage;
         if(settings.imageFilename === 'stick.png') {
             sourceImage = settings.defaultStickElement;
+        } else if (settings.userUploadedImageElement) {
+            sourceImage = settings.userUploadedImageElement;
         } else {
-            sourceImage = settings.userUploadedImageElement || settings.defaultCircleElement;
+            sourceImage = settings.defaultCircleElement;
+        }
+        
+        const trimmedImage = trimImage(sourceImage);
+
+        const maxBodyPixelSize = settings.baseSize * (Math.max(settings.startElement.size, settings.endElement.size) / 100);
+        let maxTotalPixelSize = maxBodyPixelSize;
+        if (settings.outline.enable) {
+            const scale = maxBodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height);
+            maxTotalPixelSize += settings.outline.width * 2 * scale;
         }
 
-        let maxElementSize = Math.max(settings.startElement.size, settings.endElement.size);
-         if (settings.outline.enable) {
-            maxElementSize += settings.outline.width * 2;
-        }
-        const orbitDiameter = settings.containerSize - maxElementSize - (settings.containerSize * (settings.marginPercent / 100));
+        const orbitDiameter = settings.containerSize - maxTotalPixelSize - (settings.containerSize * (settings.marginPercent / 100));
         const RADIUS = Math.max(0, orbitDiameter / 2);
         const rotationInRadians = settings.rotation * (Math.PI / 180);
         
-        const outlineImage = settings.outline.enable ? createOutlineOnlyImage(sourceImage, settings.outline.width, settings.outline.color) : null;
+        const hollowOutlineCanvas = settings.outline.enable ? createHollowOutline(trimmedImage, settings.outline.width, settings.outline.color) : null;
         
         const tintedImageCache = {};
         for (const prop of frameProps) {
             const colorKey = `rgba(${prop.tintColor.r},${prop.tintColor.g},${prop.tintColor.b},${prop.tintAlpha.toFixed(2)})`;
             if (!tintedImageCache[colorKey]) {
-                tintedImageCache[colorKey] = applyTint(sourceImage, prop.tintColor, prop.tintAlpha);
+                tintedImageCache[colorKey] = applyTint(trimmedImage, prop.tintColor, prop.tintAlpha);
             }
         }
 
@@ -474,7 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const x = settings.containerSize / 2 + RADIUS * Math.cos(angle);
                 const y = settings.containerSize / 2 + RADIUS * Math.sin(angle);
                 const props = frameProps[j];
-                const scale = props.size / Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight);
+                const bodyPixelSize = settings.baseSize * (props.size / 100);
+                const scale = bodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height);
                 
                 ctx.save();
                 ctx.translate(x, y);
@@ -486,14 +547,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 ctx.globalAlpha = props.opacity;
 
-                // Draw Outline Layer
-                if (outlineImage) {
-                    const outlineW = outlineImage.width * scale;
-                    const outlineH = outlineImage.height * scale;
-                    ctx.drawImage(outlineImage, -outlineW / 2, -outlineH / 2, outlineW, outlineH);
+                if (hollowOutlineCanvas) {
+                    const outlineW = hollowOutlineCanvas.width * scale;
+                    const outlineH = hollowOutlineCanvas.height * scale;
+                    ctx.drawImage(hollowOutlineCanvas, -outlineW / 2, -outlineH / 2, outlineW, outlineH);
                 }
 
-                // Draw Image Layer
                 const colorKey = `rgba(${props.tintColor.r},${props.tintColor.g},${props.tintColor.b},${props.tintAlpha.toFixed(2)})`;
                 const imageToDraw = tintedImageCache[colorKey];
                 const w = imageToDraw.width * scale;

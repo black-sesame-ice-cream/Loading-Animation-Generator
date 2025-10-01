@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let elements = []; // Will store { container, outline, image } objects
     let guiControllers = {};
     const DEFAULT_CIRCLE_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGESURBVHhe7doxAQAwEAOh+jed9B8sHIqAH9szHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB4wHhABj2sBGguLA1cAAAAASUVORK5CYII=';
-    const DEFAULT_STICK_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEVSURBVHhe7dihAcAwEATR/p/2b3hIQUjYvYc8s2sDIDMAmQDIBCATgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgEwAZAIgEwCYAMgEgMwAZg4sBjd4fI82nAAAAAElFTSuQmCC';
 
     // --- Helper Functions ---
     const getTimestamp = () => {
@@ -54,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tintColor: { r: 155, g: 155, b: 155 },
             tintAlpha: 1.0,
             opacity: 1.0,
-            size: 50 // Percentage
+            size: 20 // Percentage
         },
         endElement: {
             tintColor: { r: 50, g: 50, b: 50 },
@@ -66,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         outline: {
             enable: false,
             color: { r: 255, g: 255, b: 255 },
-            width: 5 
+            width: 1 // Percentage of container size
         },
 
         proxy: {
@@ -81,8 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         userUploadedImageElement: null,
         defaultCircleElement: null,
-        defaultStickElement: null,
-        imageFilename: null,
+        imageFilename: 'circle.png',
         imageOrientation: 'fixed',
 
         uploadImage: () => {
@@ -111,13 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
         useDefaultCircle: () => {
             settings.userUploadedImageElement = null;
             settings.imageFilename = 'circle.png';
-            settings.outline.enable = false;
-            guiControllers.enableOutline.updateDisplay();
-            regenerateAnimation();
-        },
-        useDefaultStick: () => {
-            settings.userUploadedImageElement = null;
-            settings.imageFilename = 'stick.png';
             settings.outline.enable = false;
             guiControllers.enableOutline.updateDisplay();
             regenerateAnimation();
@@ -271,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const hasUserImage = !!settings.userUploadedImageElement;
         guiControllers.useDefaultCircle.domElement.style.display = hasUserImage ? 'block' : 'none';
-        guiControllers.useDefaultStick.domElement.style.display = hasUserImage ? 'block' : 'none';
         guiControllers.imageOrientation.domElement.style.display = hasUserImage ? 'block' : 'none';
     };
 
@@ -308,30 +298,25 @@ document.addEventListener('DOMContentLoaded', () => {
             propsArray.push({ tintColor: {r,g,b}, tintAlpha, opacity, size });
         }
         
-        let sourceImage;
-        if(settings.imageFilename === 'stick.png') {
-            sourceImage = settings.defaultStickElement;
-        } else if (settings.userUploadedImageElement) {
-            sourceImage = settings.userUploadedImageElement;
-        } else {
-            sourceImage = settings.defaultCircleElement;
-        }
+        let sourceImage = settings.userUploadedImageElement || settings.defaultCircleElement;
         
         const trimmedImage = trimImage(sourceImage);
 
         const maxBodyPixelSize = settings.containerSize * (Math.max(start.size, end.size) / 100);
         let maxTotalPixelSize = maxBodyPixelSize;
+        const outlineWidthPx = settings.containerSize * (settings.outline.width / 100);
+
         if (settings.outline.enable) {
-            const scale = maxBodyPixelSize > 0 ? maxBodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height) : 0;
-            maxTotalPixelSize += settings.outline.width * 2 * scale;
+             maxTotalPixelSize += outlineWidthPx * 2;
         }
         
         const orbitDiameter = settings.containerSize - maxTotalPixelSize - (settings.containerSize * (settings.marginPercent / 100));
         const RADIUS = Math.max(0, orbitDiameter / 2);
         
         const rotationInRadians = settings.rotation * (Math.PI / 180);
-
-        const hollowOutlineCanvas = settings.outline.enable ? createHollowOutline(trimmedImage, settings.outline.width, settings.outline.color) : null;
+        
+        const outlineWidthForGenerator = outlineWidthPx > 0 && maxBodyPixelSize > 0 ? (outlineWidthPx / (maxBodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height))) : 0;
+        const hollowOutlineCanvas = settings.outline.enable ? createHollowOutline(trimmedImage, outlineWidthForGenerator, settings.outline.color) : null;
         const hollowOutlineURL = hollowOutlineCanvas ? hollowOutlineCanvas.toDataURL() : null;
 
         const tintedImageCache = {};
@@ -465,7 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageFolder = gui.addFolder('Image Settings');
     imageFolder.add(settings, 'uploadImage').name('Upload Custom Image...');
     guiControllers.useDefaultCircle = imageFolder.add(settings, 'useDefaultCircle').name('Use Default Circle');
-    guiControllers.useDefaultStick = imageFolder.add(settings, 'useDefaultStick').name('Use Default Stick');
     guiControllers.imageFilename = imageFolder.add({filename: ''}, 'filename').name('Current:').listen();
     guiControllers.imageFilename.domElement.style.pointerEvents = 'none';
     guiControllers.imageOrientation = imageFolder.add(settings, 'imageOrientation', ['fixed', 'center']).name('Image Orientation').onFinishChange(regenerateAnimation);
@@ -477,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
             settings.outline.color = hexToRgb(value);
             if(settings.outline.enable) regenerateAnimation();
         });
-    outlineFolder.add(settings.outline, 'width', 0, 50, 0.1).name('Width (px)').onFinishChange(()=> {
+    outlineFolder.add(settings.outline, 'width', 0, 5, 0.1).name('Width (%)').onFinishChange(()=> {
         if(settings.outline.enable) regenerateAnimation();
     });
     
@@ -491,29 +475,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const n = settings.numCircles;
         let frameProps = [...propsArray];
         
-        let sourceImage;
-        if(settings.imageFilename === 'stick.png') {
-            sourceImage = settings.defaultStickElement;
-        } else if (settings.userUploadedImageElement) {
-            sourceImage = settings.userUploadedImageElement;
-        } else {
-            sourceImage = settings.defaultCircleElement;
-        }
+        let sourceImage = settings.userUploadedImageElement || settings.defaultCircleElement;
         
         const trimmedImage = trimImage(sourceImage);
+        const outlineWidthPx = settings.containerSize * (settings.outline.width / 100);
 
-        const maxBodyPixelSize = settings.baseSize * (Math.max(settings.startElement.size, settings.endElement.size) / 100);
+        const maxBodyPixelSize = settings.containerSize * (Math.max(settings.startElement.size, settings.endElement.size) / 100);
         let maxTotalPixelSize = maxBodyPixelSize;
         if (settings.outline.enable) {
-            const scale = maxBodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height);
-            maxTotalPixelSize += settings.outline.width * 2 * scale;
+             maxTotalPixelSize += outlineWidthPx * 2;
         }
 
         const orbitDiameter = settings.containerSize - maxTotalPixelSize - (settings.containerSize * (settings.marginPercent / 100));
         const RADIUS = Math.max(0, orbitDiameter / 2);
         const rotationInRadians = settings.rotation * (Math.PI / 180);
         
-        const hollowOutlineCanvas = settings.outline.enable ? createHollowOutline(trimmedImage, settings.outline.width, settings.outline.color) : null;
+        const outlineWidthForGenerator = outlineWidthPx > 0 && maxBodyPixelSize > 0 ? (outlineWidthPx / (maxBodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height))) : 0;
+        const hollowOutlineCanvas = settings.outline.enable ? createHollowOutline(trimmedImage, outlineWidthForGenerator, settings.outline.color) : null;
         
         const tintedImageCache = {};
         for (const prop of frameProps) {
@@ -534,8 +512,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const x = settings.containerSize / 2 + RADIUS * Math.cos(angle);
                 const y = settings.containerSize / 2 + RADIUS * Math.sin(angle);
                 const props = frameProps[j];
-                const bodyPixelSize = settings.baseSize * (props.size / 100);
-                const scale = bodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height);
+                const bodyPixelSize = settings.containerSize * (props.size / 100);
+                const scale = bodyPixelSize > 0 ? bodyPixelSize / Math.max(trimmedImage.width, trimmedImage.height) : 0;
                 
                 ctx.save();
                 ctx.translate(x, y);
@@ -574,12 +552,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultCircleImg = new Image();
     defaultCircleImg.onload = () => {
         settings.defaultCircleElement = defaultCircleImg;
-        const defaultStickImg = new Image();
-        defaultStickImg.onload = () => {
-            settings.defaultStickElement = defaultStickImg;
-            regenerateAnimation();
-        };
-        defaultStickImg.src = DEFAULT_STICK_IMAGE;
+        regenerateAnimation();
     };
     defaultCircleImg.src = DEFAULT_CIRCLE_IMAGE;
 });
+

@@ -1,3 +1,7 @@
+html {
+    height: 100%;
+}
+
 /* ページ全体の背景 */
 body {
     background-color: #222; 
@@ -12,7 +16,12 @@ body {
 /* アニメーションのコンテナ */
 #animation-container {
     position: relative;
-    background-color: #333333; 
+    /* ▼ 修正箇所 ▼ */
+    background: 
+        repeating-conic-gradient(
+            #888888 0% 25%, 
+            #555555 25% 50%
+        ) top left / 20px 20px;
 }
 
 /* 要素のコンテナ */

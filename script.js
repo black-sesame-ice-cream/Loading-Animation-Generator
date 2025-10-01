@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let animationTimer;
     let elements = []; // Will store { container, outline, image } objects
     let guiControllers = {};
-    const DEFAULT_CIRCLE_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGESURBVHhe7doxAQAwEAOh+jed9B8sHIqAH9szHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB5wHjAecB4wHnAeMB5wHnAeMB5wHnAeMB5wHjAecB4wHnAeMB4wHhABj2sBGguLA1cAAAAASUVORK5CYII=';
 
     // --- Helper Functions ---
     const getTimestamp = () => {
@@ -266,6 +265,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const regenerateAnimation = () => {
+        // << 修正箇所 >>
+        container.style.width = `${settings.containerSize}px`;
+        container.style.height = `${settings.containerSize}px`;
+
         if (animationTimer) clearInterval(animationTimer);
         container.innerHTML = '';
         elements = [];
@@ -451,6 +454,8 @@ document.addEventListener('DOMContentLoaded', () => {
     imageFolder.add(settings, 'uploadImage').name('Upload Custom Image...');
     guiControllers.useDefaultCircle = imageFolder.add(settings, 'useDefaultCircle').name('Use Default Circle');
     guiControllers.imageFilename = imageFolder.add({filename: ''}, 'filename').name('Current:').listen();
+    // << 修正箇所 >>
+    guiControllers.imageFilename.domElement.querySelector('.widget').style.display = 'none';
     guiControllers.imageFilename.domElement.style.pointerEvents = 'none';
     guiControllers.imageOrientation = imageFolder.add(settings, 'imageOrientation', ['fixed', 'center']).name('Image Orientation').onFinishChange(regenerateAnimation);
 
@@ -554,6 +559,5 @@ document.addEventListener('DOMContentLoaded', () => {
         settings.defaultCircleElement = defaultCircleImg;
         regenerateAnimation();
     };
-    defaultCircleImg.src = DEFAULT_CIRCLE_IMAGE;
+    defaultCircleImg.src = 'circle.png';
 });
-

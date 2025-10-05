@@ -39,3 +39,22 @@ body {
     background-repeat: no-repeat;
     background-position: center;
 }
+
+/* GitHubアイコンへのリンクのスタイル */
+#github-link {
+    position: fixed; /* 画面上の特定の位置に固定 */
+    top: 20px;       /* 上から20pxの位置 */
+    left: 20px;      /* 左から20pxの位置 */
+    z-index: 9999;   /* 他の要素より手前に表示する */
+}
+
+/* アイコン自体のスタイル */
+#github-link .fa-github {
+    font-size: 32px;   /* アイコンの大きさ */
+    color: #dddddd;     /* アイコンの色 */
+}
+
+/* カーソルを合わせた時のスタイル */
+#github-link:hover .fa-github {
+    opacity: 0.7; /* 少し透明にする */
+}

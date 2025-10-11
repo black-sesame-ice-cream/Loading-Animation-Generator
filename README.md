@@ -19,12 +19,12 @@ This tool is designed for use on a PC with the Google Chrome browser. Operation 
 ## Demo
 You can try this tool on the page below.
 
-https://black-sesame-ice-cream.github.io/Loading-Animation-Generator/
+https://black-sesame-ice-cream.github.io/loading-animation-generator/
 
 ## デモ
 以下のページでこのツールを試すことができます。
 
-https://black-sesame-ice-cream.github.io/Loading-Animation-Generator/
+https://black-sesame-ice-cream.github.io/loading-animation-generator/
 
 ## Controls
 ### General Settings

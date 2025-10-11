@@ -1,8 +1,8 @@
 # Loading Animation Generator
 
-![image1](Images/loading_animation_1.png)
-![image2](Images/loading_animation_2.png)
-![image3](Images/loading_animation_3.png)
+![image1](images/loading_animation_1.png)
+![image2](images/loading_animation_2.png)
+![image3](images/loading_animation_3.png)
 
 ## Overview
 This is a web tool for generating loading animations. You can customize the number, size, color, and motion of the elements to create your own unique animation. It supports both simple circles and user-uploaded PNG images as animation elements. The created animations can be exported as a sequence of PNG images (in a ZIP file) or as an APNG file.

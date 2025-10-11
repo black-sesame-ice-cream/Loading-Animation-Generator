@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "lil-gui": "^0.20.0",
+    "pako": "^2.1.0",
+    "upng-js": "^2.1.0"
+  },
+  "devDependencies": {
+    "license-checker": "^25.0.1"
+  }
+}

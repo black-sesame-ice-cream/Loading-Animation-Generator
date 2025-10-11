@@ -559,5 +559,5 @@ document.addEventListener('DOMContentLoaded', () => {
         settings.defaultCircleElement = defaultCircleImg;
         regenerateAnimation();
     };
-    defaultCircleImg.src = 'circle.png';
+    defaultCircleImg.src = 'images/circle.png';
 });

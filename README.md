@@ -91,6 +91,20 @@ https://black-sesame-ice-cream.github.io/loading-animation-generator/
 - **Save as PNG (ZIP)**: アニメーションを個別のPNGフレームのシーケンスとして、ZIPファイルにパッケージ化してエクスポートします。
 - **Save as APNG**: アニメーションを単一のアニメーションPNG（APNG）ファイルとしてエクスポートします。
 
+## Licenses
+Please see below for details.
+
+[License](LICENSE/)
+
+[Third-Party Licenses](THIRD-PARTY-LICENSES.txt/)
+
+## ライセンス
+以下を参照してください。
+
+[ライセンス](LICENSE/)
+
+[第三者ライセンス](THIRD-PARTY-LICENSES.txt/)
+
 ## Tech Stack
 - HTML
 - CSS
